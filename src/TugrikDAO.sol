@@ -8,7 +8,6 @@ contract TugrikDAO {
 
     // should be private?
     mapping (uint256 => Proposal) public proposals;
-    uint256 public numProposals;
 
     constructor() {
         tugrikToken = new TugrikToken();
@@ -21,12 +20,10 @@ contract TugrikDAO {
     }
 
     struct Proposal {
-        address target;
-        uint256[] data;
         uint256 deadline;
         bool executed;
-        mapping(address => bool) yesVoters;
-        mapping(address => bool) noVoters;
+        address[] yesVoters;
+        address[] noVoters;
     }
 
     modifier memberOnly() {
@@ -34,22 +31,50 @@ contract TugrikDAO {
         _;
     }
 
-    function makeProposal(address target, uint256[] calldata data) 
+    event ProposalSubmitted(
+        uint256 proposalId,
+        address[] targets, 
+        uint256[] values,
+        bytes[] calldatas,
+        string description
+    );
+
+//  TODO: calldata vs memory
+    function submitProposal(
+        address[] calldata targets, 
+        uint256[] calldata values,
+        bytes[] calldata calldatas,
+        string calldata description) 
         external 
-        memberOnly 
+        memberOnly {
+
+        uint256 proposalId = _hashProposal(targets, values, calldatas, keccak256(bytes(description)));
+
+        Proposal storage proposal = proposals[proposalId];
+        
+        require(proposal.deadline == 0);
+        
+        proposal.deadline = block.timestamp + 2 minutes; // TODO: increase timeout
+
+        emit ProposalSubmitted(
+            proposalId,
+            targets,
+            values,
+            calldatas,
+            description
+        );
+    }
+
+    function _hashProposal(
+        address[] calldata targets, 
+        uint256[] calldata values,
+        bytes[] calldata calldatas,
+        bytes32  descriptionHash) 
+        private
+        pure
         returns (uint256) {
 
-        // OZ doesn't store this stuff, it just hashes it and uses the hash as an index
-        
-        Proposal storage proposal = proposals[numProposals];
-        proposal.target = target;
-        proposal.data = data;
-        proposal.deadline = block.timestamp + 2 minutes;
-
-        // Can just hash proposal and use that as id
-        numProposals ++;
-
-        return numProposals - 1;
+        return uint256(keccak256(abi.encode(targets, values, calldatas, descriptionHash)));
     }
 
 }
