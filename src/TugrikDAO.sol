@@ -6,19 +6,13 @@ import "./TugrikToken.sol";
 contract TugrikDAO {
     TugrikToken public tugrikToken;
 
-    // should be private?
-    mapping (uint256 => Proposal) public proposals;
+    mapping (uint256 => Proposal) private proposals;
 
     constructor() {
         tugrikToken = new TugrikToken();
         tugrikToken.mint(msg.sender);
     }
     
-    enum VoteType {
-        YES,
-        NO
-    }
-
     struct Proposal {
         uint256 deadline;
         bool executed;
@@ -39,15 +33,15 @@ contract TugrikDAO {
         string description
     );
 
-//  TODO: calldata vs memory
     function submitProposal(
         address[] calldata targets, 
         uint256[] calldata values,
         bytes[] calldata calldatas,
-        string calldata description) 
+        string calldata description
+    ) 
         external 
-        memberOnly {
-
+        memberOnly 
+    {
         uint256 proposalId = _hashProposal(targets, values, calldatas, keccak256(bytes(description)));
 
         Proposal storage proposal = proposals[proposalId];
@@ -69,10 +63,12 @@ contract TugrikDAO {
         address[] calldata targets, 
         uint256[] calldata values,
         bytes[] calldata calldatas,
-        bytes32  descriptionHash) 
+        bytes32  descriptionHash
+    ) 
         private
         pure
-        returns (uint256) {
+        returns (uint256) 
+    {
 
         return uint256(keccak256(abi.encode(targets, values, calldatas, descriptionHash)));
     }

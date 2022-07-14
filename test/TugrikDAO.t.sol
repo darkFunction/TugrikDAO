@@ -7,8 +7,8 @@ import "../src/TugrikToken.sol";
 
 contract TugrikDAOTest is Test {
     TugrikDAO dao;
-    address nobody = address(0x1);
-    address owner = address(0x2);
+    address private nobody = address(0x1);
+    address private owner = address(0x2);
 
     function setUp() public {
         vm.prank(owner);
